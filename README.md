@@ -1,7 +1,19 @@
 # International username and password strings using PRECIS
 
+### Summary
+
 PRECIS, "Preparation, Enforcement, and Comparison of Internationalized Strings", is a
-framework for handling Unicode strings representing addresses, identifiers and passwords.
+framework for handling Unicode strings representing thinks like network addresses, 
+identifiers and passwords.
+
+The client (e.g. web browser) **prepares** strings (e.g. username and passsword) before 
+sending them over the network. Servers (e.g. a PHP web app) **enforce** specific rules
+(e.g. checking for disallowed characters, case folding, trimming, Unicode normalization) 
+on the recieved strings *before* comparing them with local data (e.g. usernames and 
+passwords in the database). The server must also prepare the local strings either
+at lookup time or when they are stored (for hashed passwords it must be the latter). 
+
+### Functionality
 
 The `Precis` class provides static methods to:
 
@@ -17,7 +29,7 @@ The `Precis` class provides static methods to:
 
 In order to implement these, certain Unicode functionality is required that was 
 absent in PHP before PHP 7.0 introduced [IntlChar](http://php.net/manual/en/class.intlchar.php).
-The package has two more classes as a stop-gap that may be useful for other purposes:
+The package has two more classes as a stop-gap. They may be useful for other purposes.
 
 - `CaseFold` provides static methods for:
 
@@ -28,6 +40,8 @@ The package has two more classes as a stop-gap that may be useful for other purp
 
     - Getting the Unicode [Bidi](http://unicode.org/faq/bidi.html) [property](http://www.unicode.org/reports/tr9/) for a character
     - Applying the [IDNA Bidi Rule](https://tools.ietf.org/html/rfc5893)
+
+### Methods
 
 All public methods are static and documented in PHP dock blocks:
 
@@ -45,7 +59,6 @@ Precis::enforceUsernameCasePreserved()
 Precis::enforceOpaqueString()
 Precis::enforceNickname()
 
-Precis::hex2str()
 Precis::hex2utf8()
 Precis::utf8chr()
 Precis::utf8ord()
@@ -65,7 +78,7 @@ Bidi::getClass()
 Bidi::rule()
 ```
 
-#### Copyright and license
+### Copyright and license
 
 - Copyright (c) 2015 Spinitron LLC
 - ISC license https://opensource.org/licenses/ISC
