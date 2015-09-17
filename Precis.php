@@ -364,11 +364,6 @@ class Precis
         return self::CPROP_DISALLOWED;
     }
 
-    public static function hex2str($hex)
-    {
-        return mb_convert_encoding(hex2bin($hex), 'UTF-8', 'UTF-32BE');
-    }
-
     /**
      * Returns the character of a hex codepoint.
      *
