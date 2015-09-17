@@ -1,0 +1,36 @@
+{
+    "name": "spinitron/precis",
+    "description": "Implements PRECIS Framework and RFC 5893 Bidi Rule",
+    "keywords": [
+        "i18n",
+        "precis",
+        "unicode",
+        "bidi",
+        "password",
+        "username",
+        "idn"
+    ],
+    "type": "library",
+    "license": "ISC",
+    "support": {
+        "email": "tom@thefsb.org"
+    },
+    "authors": [
+        {
+            "name": "Tom Worster",
+            "email": "tom@spinitron.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.8",
+        "psy/psysh": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "spinitron\\precis\\": ""
+        }
+    }
+}
