@@ -10,6 +10,37 @@ use spinitron\precis\Precis;
 
 class PrecisBaseUnicodeTest extends BaseUnicodeTest
 {
+    public function testUtf8utils()
+    {
+        for ($ord = 0; $ord < 1114112; $ord += 1) {
+            // Surrogates
+            if ($ord >= 55296 && $ord <= 57343) {
+                continue;
+            }
+
+            if ($ord < 65536) {
+                $json = sprintf('"\u%04X"', $ord);
+            } else {
+                $twenty = $ord - 65536;
+                $low = $twenty % 1024 + 56320;
+                $high = ((int) floor($twenty/1024)) % 1024 + 55296;
+                $json = sprintf('"\u%04X\u%04X"', $high, $low);
+            }
+            $expectedChar = json_decode($json);
+
+            $this->assertSame($expectedChar, Precis::utf8chr($ord));
+
+            $actualOrd = Precis::utf8ord($expectedChar);
+            $this->assertSame($ord, $actualOrd);
+
+            $actualChar2 = Precis::codePoint2utf8(sprintf('\x{%08X}', $ord));
+            $this->assertSame($expectedChar, $actualChar2);
+
+            $actualCodePoint = Precis::utf82CodePoint($expectedChar);
+            $this->assertSame(sprintf('U+%04X', $ord), $actualCodePoint);
+        }
+    }
+
     public function testMiddleDot()
     {
         $this->assertFalse(Precis::isFreeform('·'));
@@ -60,6 +91,63 @@ class PrecisBaseUnicodeTest extends BaseUnicodeTest
         $this->assertTrue(Precis::isFreeform('۱۲۳۴۵'));
         $this->assertFalse(Precis::isFreeform('١٢٣٤٥۶'));
         $this->assertFalse(Precis::isFreeform('۱۲۳۴۵٦'));
+    }
+
+    public function testPrecisProperty()
+    {
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('ß', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('ς', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('۽', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('་〇', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('་', 0));
+
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('ـ', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〮', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〯', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〱', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〲', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〳', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〴', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〵', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〻', 0));
+
+        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('ࣞ', 0));
+        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('৙', 0));
+        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('੻', 0));
+
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('!', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('~', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('x', 0));
+        $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('Y', 0));
+
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('ᄋ', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('ᆖ', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('ᇰ', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('­', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('᠎', 0));
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('​', 0));
+
+        $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty("\x04", 0));
+
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('１', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('ǅ', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('Ⅳ', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('³', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('⃝', 0));
+
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty(' ', 0));
+
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('×', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('¥', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('¨', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('©', 0));
+
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('‿', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('־', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('⁅', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('⁆', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('«', 0));
+        $this->assertSame(Precis::CPROP_FREE_PVAL, Precis::getPrecisProperty('»', 0));
     }
 
     public function testProfilesSimple()
