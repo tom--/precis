@@ -10,6 +10,13 @@ class CaseFold
 {
     use CaseFoldDataTrait;
 
+    /**
+     * Folds one character
+     *
+     * @param string[] $matches preg_replace callback arg
+     *
+     * @return string the case-folded character
+     */
     private static function foldChar($matches)
     {
         $replacement = array_key_exists($matches[0], static::$codePoints)
@@ -26,11 +33,11 @@ class CaseFold
      * characters with properties uppercase or titlecase but Unicode case folding
      * changes more characters than that.
      *
-     * @param string $string
-     * @param bool $upperTitleOnly Set true to only fold characters with uppercase or
-     * title-case properties.
+     * @param string $string the string to case fold
+     * @param bool $upperTitleOnly Set true to only fold characters with Unicode uppercase
+     * or title-case properties.
      *
-     * @return mixed
+     * @return string the case-folded string
      */
     public static function fold($string, $upperTitleOnly = false)
     {

@@ -210,9 +210,9 @@ class Precis
     }
 
     /**
-     * Implements the test for the HasCompat (Q) category in RFC 7564.
+     * Implements the test for the PRECIS HasCompat (Q) category in RFC 7564.
      *
-     * @param $char
+     * @param string $char
      *
      * @return bool
      */
@@ -237,13 +237,13 @@ class Precis
     }*/
 
     /**
-     * @param $string
-     * @param $pos
+     * Tests CONTEXTO exception characters in their string context according to RFC 5892.
      *
-     * @return string
-     * @throws \Exception
-     * @internal param $char
+     * @param string $string string containing the character to test
+     * @param int $pos position in the string of the character to test
      *
+     * @return int either Precis::CPROP_DISALLOWED or Precis::CPROP_PVALID
+     * @throws \Exception if the character is not a CONTEXTO exception
      */
     public static function getContextO($string, $pos)
     {
@@ -288,12 +288,13 @@ class Precis
     }
 
     /**
-     * @param $string
-     * @param $pos
+     * Tests CONTEXTJ exception characters in their string context according to RFC 5892.
      *
-     * @return string
-     * @internal param $char
+     * @param string $string string containing the character to test
+     * @param int $pos position in the string of the character to test
      *
+     * @return int either Precis::CPROP_DISALLOWED or Precis::CPROP_PVALID
+     * @throws \Exception if the character is not a CONTEXTJ exception
      */
     public static function getContextJ($string, $pos)
     {
@@ -302,35 +303,34 @@ class Precis
         }
 
         // RFC 5892 Appendix A.1. and A.2. first test
-        $before = mb_substr($string, $pos - 1, 1, 'UTF-8');
-        if (static::inCharset($before, self::CC_CCC_VIRAMA)) {
+        $withPrev = mb_substr($string, $pos - 1, 2, 'UTF-8');
+        if (preg_match('%^[' . self::CC_CCC_VIRAMA . '][\x{200C}\x{200D}]$%u', $withPrev)) {
             return self::CPROP_PVALID;
         }
 
-        // RFC 5892 Appendix A.1.
-        $char = mb_substr($string, $pos, 1, 'UTF-8');
-        if (static::utf82CodePoint($char) === 'U+200D') {
-            return self::CPROP_DISALLOWED;
-        }
-
-        // RFC 5892 Appendix A.2. second test
+        // RFC 5892 Appendix A.1. second test
         $pattern = '[' . self::CC_JT_RIGHT . self::CC_JT_DUAL . ']';
         $pattern .= '[' . self::CC_JT_TRANSPARENT . ']*';
         $pattern .= '\x{200C}';
         $pattern .= '[' . self::CC_JT_TRANSPARENT . ']*';
         $pattern .= '[' . self::CC_JT_RIGHT . self::CC_JT_DUAL . ']';
 
-        return (bool) preg_match("%$pattern%u", $string);
+        if (preg_match("%$pattern%u", $string)) {
+            return self::CPROP_PVALID;
+        }
+
+        throw new \InvalidArgumentException("Unexpected character at position $pos in string");
     }
 
     /**
      * Determines the "derived property" of a character in the context of a string.
      * Implements the algorithm specified in RFC 7564 8. Code Point Properties.
      *
-     * @param string $string
-     * @param int $pos
+     * @param string $string string containing the character to test
+     * @param int $pos position in the string of the character to test
      *
-     * @return int One of the CPROP_ derived property constants
+     * @return int the character's property: Precis::CPROP_PVALID, Precis::CPROP_FREE_PVAL,
+     * Precis::CPROP_DISALLOWED or Precis::CPROP_UNASSIGNED
      */
     public static function getPrecisProperty($string, $pos)
     {
@@ -371,7 +371,7 @@ class Precis
      *
      * @param int $ord Unicode codepoint as a PHP intger
      *
-     * @return null|string UTF-8 string or null if $ord is a surrogate
+     * @return null|string Single-character UTF-8 string or null if $ord is a surrogate
      */
     public static function utf8chr($ord)
     {
@@ -428,7 +428,7 @@ class Precis
      * @param int $pos position in th string of the character to decode
      * @param string $style output style, e.g. 'U+', '\u', '\x{}'
      *
-     * @return string
+     * @return string Unicode cope point, e.g. 'U+0065'
      */
     public static function utf82CodePoint($string, $pos = 0, $style = 'U+')
     {
@@ -442,7 +442,7 @@ class Precis
     /**
      * Analyzes a string determining the PRECIS code point property of each character.
      *
-     * @param $string
+     * @param string $string the string to analyze
      *
      * @return array A numeric array with one element for each character in the input string.
      * Each element is an array of thr form
@@ -469,9 +469,9 @@ class Precis
     /**
      * Returns the PRECIS String Class of a given string.
      *
-     * @param string $string teh string to test
+     * @param string $string the string to test
      *
-     * @return int the class: Precis::SCLASS_IDENTIFIER, Precis::SCLASS_FREEFORM
+     * @return int the string's class: Precis::SCLASS_IDENTIFIER, Precis::SCLASS_FREEFORM
      * or Precis::SCLASS_NUL
      */
     public static function getStringClass($string)
@@ -495,11 +495,12 @@ class Precis
     /**
      * Tests a string for membership in a String Class using an anonymous function.
      *
-     * @param string $string
-     * @param \Closure $test The function should have one argument, which will be
-     * one of the Precis::CPROP_ constants, and returns bool.
+     * @param string $string the string to test
+     * @param \Closure $test an anonymous function with one argument (one of Precis::CPROP_PVALID,
+     * Precis::CPROP_FREE_PVAL, Precis::CPROP_DISALLOWED or Precis::CPROP_UNASSIGNED) and
+     * that returns bool.
      *
-     * @return bool
+     * @return bool true if all characters in the string pass the given test
      */
     protected static function isClass($string, \Closure $test)
     {
@@ -517,9 +518,9 @@ class Precis
     /**
      * Tests if a string conforms to PRECIS IdentifierClass
      *
-     * @param $string
+     * @param string $string the string to test
      *
-     * @return bool
+     * @return bool true if the string conforms to PRECIS IdentifierClass
      */
     public static function isIdentifier($string)
     {
@@ -531,9 +532,9 @@ class Precis
     /**
      * Tests if a string conforms to PRECIS FreeformClass
      *
-     * @param $string
+     * @param string $string the string to test
      *
-     * @return bool
+     * @return bool true if the string conforms to PRECIS FreeformClass
      */
     public static function isFreeform($string)
     {
@@ -545,9 +546,9 @@ class Precis
     /**
      * Map fullwidth and halfwidth characters to their compatibility replacements.
      *
-     * @param string $string
+     * @param string $string the string to perform mapping on
      *
-     * @return string
+     * @return string the mapped string
      */
     public static function mapFullwidthHalfwidthToCompat($string)
     {
@@ -563,7 +564,7 @@ class Precis
     /**
      * Prepares a string according to the PRECIS Username profles.
      *
-     * @param string $string
+     * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
      */
@@ -581,7 +582,7 @@ class Precis
     /**
      * Enforces one of the PRECIS Username profiles on a string.
      *
-     * @param string $string
+     * @param string $string the string to enforce
      * @param bool $caseMapped set true to enforce UsernameCaseMapped or false for UsernameCasePreserved
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
@@ -616,7 +617,7 @@ class Precis
     /**
      * Prepares a string according to PRECIS UsernameCaseMapped profle.
      *
-     * @param string $string
+     * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
      */
@@ -628,7 +629,7 @@ class Precis
     /**
      * Prepares a string according to PRECIS UsernameCasePreserved profle.
      *
-     * @param string $string
+     * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
      */
@@ -640,7 +641,7 @@ class Precis
     /**
      * Prepares a string according to PRECIS OpaqueString profle for passwords.
      *
-     * @param string $string
+     * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
      */
@@ -655,7 +656,7 @@ class Precis
     /**
      * Prepares a string according to PRECIS Nickname profle.
      *
-     * @param string $string
+     * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
      */
@@ -667,7 +668,7 @@ class Precis
     /**
      * Enforces the PRECIS enforce UsernameCaseMapped on a string.
      *
-     * @param string $string
+     * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
      */
@@ -679,7 +680,7 @@ class Precis
     /**
      * Enforces the PRECIS UsernameCasePreserved on a string.
      *
-     * @param string $string
+     * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
      */
@@ -691,7 +692,7 @@ class Precis
     /**
      * Enforces the PRECIS OpaqueString profle for passwords on a string.
      *
-     * @param string $string
+     * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
      */
@@ -721,7 +722,7 @@ class Precis
     /**
      * Enforces the PRECIS Nickname profle on a string.
      *
-     * @param string $string
+     * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
      */

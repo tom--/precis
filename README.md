@@ -92,6 +92,40 @@ Bidi::getClass()
 Bidi::rule()
 ```
 
+
+### Data
+
+The `Bidi` and `CaseFold` classes each have  their own repective "data trait" that contains
+the relevant data from the Unicode Character Database.
+They are PHP classes in order to exploit opcode caches.
+They are traits not because I plan
+to reuse them elsewhere but for convenience. First, because they are automatically
+generated from the UCD and, second, because it's easier to work on the corresponding
+methods without the big array literals in the same editor.
+
+The generators for the data traits are in the `data` directory. They download the
+relevant UCD files and write the PHP trait classes to standard output. So you can
+regenerate them, for example, as follows (assuming php is in your path):
+
+    cd path/to/precis/project/dir
+    php data/generateBidi.php > BidiDataTrait.php
+    php data/generateCaseFold.php > CaseFoldDataTrait.php
+
+
+### Unit tests
+
+The `Precis` tests are incomplete because I could not find test vectors for PRECIS string
+classes or profiles or for the Bidi Rule.
+
+The following are relatively well tested:
+
+- UTF-8 utility functions are tested on every Unicode code point
+- `Bidi::getClass()`. NOTE: this test downloads UnicideData.txt from UCD (1.5 MB)
+- `CaseFold::fold()` although this requires PHP 7
+- The CONTEXTO and CONTEXTJ rules
+- `Precis::getPrecisProperty()`
+
+
 ### Copyright and license
 
 - Copyright (c) 2015 Spinitron LLC

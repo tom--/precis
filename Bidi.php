@@ -13,9 +13,9 @@ class Bidi
     /**
      * Returns the Bidi class of a character.
      *
-     * @param string $char One UTF-8 character
+     * @param string $char a single-character UTF-8 string
      *
-     * @return string A Bidi class aliase, e.g. 'L', 'R', 'ON', etc.
+     * @return string the Bidi class alias (e.g. 'L', 'R', 'ON', etc.) of the character
      */
     public static function getClass($char)
     {
@@ -51,6 +51,15 @@ class Bidi
         return 'L';
     }
 
+    /**
+     * Searches for a code point within ranges to find Bidi properties.
+     *
+     * @param array[] $ranges the ranges to search
+     * @param int $ord code point to search for as an integer
+     *
+     * @return string|null the Bidi class alias (e.g. 'L', 'R', 'ON', etc.) of the
+     * code point or null if was not found in the given ranges
+     */
     protected static function searchRanges($ranges, $ord)
     {
         // Binary search the code point ranges.
@@ -78,9 +87,9 @@ class Bidi
     /**
      * Applies the RFC 5893 Bidi rule to a string.
      *
-     * @param string $string
+     * @param string $string the string to test for the Bidi Rule
      *
-     * @return bool Whether the string passes the Bidi rule or not.
+     * @return bool Whether the string passes all conditions of the Bidi rule or not.
      */
     public static function rule($string)
     {
