@@ -41,29 +41,28 @@ The package has two more classes as a stop-gap. They may be useful for other pur
     - Getting the Unicode [Bidi](http://unicode.org/faq/bidi.html) [property](http://www.unicode.org/reports/tr9/) for a character
     - Applying the [IDNA Bidi Rule](https://tools.ietf.org/html/rfc5893)
 
-### Methods
+### Method index
 
 All public methods are static and documented in PHP dock blocks:
 
 ```php
+// test for PRECIS string classes
 Precis::isIdentifier()
 Precis::isFreeform()
 
+// prepare for PRECIS profiles
 Precis::prepareUsernameCaseMapped()
 Precis::prepareUsernameCasePreserved()
 Precis::prepareOpaqueString()
 Precis::prepareNickname()
 
+// enforce PRECIS profiles
 Precis::enforceUsernameCaseMapped()
 Precis::enforceUsernameCasePreserved()
 Precis::enforceOpaqueString()
 Precis::enforceNickname()
 
-Precis::hex2utf8()
-Precis::utf8chr()
-Precis::utf8ord()
-Precis::utf8CodePoint()
-
+// PRECIS utilities
 Precis::analyzeString()
 Precis::getStringClass()
 Precis::getPrecisProperty()
@@ -72,8 +71,16 @@ Precis::getContextO()
 Precis::getContextJ()
 Precis::mapFullwidthHalfwidthToCompat()
 
+// general UTF-8 character utilities
+Precis::utf8chr()
+Precis::utf8ord()
+Precis::codePoint2utf8()
+Precis::utf82CodePoint()
+
+// Unicide case folding
 CaseFold::fold()
 
+// Unicode Bidi class and IDNA Bidi rule
 Bidi::getClass()
 Bidi::rule()
 ```
