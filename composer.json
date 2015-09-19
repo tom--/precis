@@ -1,6 +1,8 @@
 {
     "name": "spinitron/precis",
-    "description": "Implements PRECIS Framework and RFC 5893 Bidi Rule",
+    "description": "Implements PRECIS Framework, IDNA Bidi Rule, Unicode casefolding and Bidi properties",
+    "version": "0.1.1",
+    "type": "library",
     "keywords": [
         "i18n",
         "precis",
@@ -10,11 +12,7 @@
         "username",
         "idn"
     ],
-    "type": "library",
     "license": "ISC",
-    "support": {
-        "email": "tom@thefsb.org"
-    },
     "authors": [
         {
             "name": "Tom Worster",
