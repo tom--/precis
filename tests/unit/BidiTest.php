@@ -9,7 +9,7 @@ namespace spinitron\precis\tests\unit;
 use spinitron\precis\Bidi;
 use spinitron\precis\Precis;
 
-class BidiBaseUnicodeTest extends BaseUnicodeTest
+class BidiTest extends BaseUnicodeTest
 {
     protected $ucdLocalFile;
     protected $ucdFileUrl = 'http://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt';
@@ -40,7 +40,7 @@ class BidiBaseUnicodeTest extends BaseUnicodeTest
             $pattern = '%^([0-9A-F]{4,6});[^;]+;[^;]+;[^;]+;([^;]+)%';
             if (preg_match($pattern, $buffer, $matches) && $matches[1] && $matches[2]) {
                 $hex = $matches[1];
-                $char = Precis::hex2utf8($hex);
+                $char = Precis::codePoint2utf8($hex);
                 if ($char === null) {
                     continue;
                 }

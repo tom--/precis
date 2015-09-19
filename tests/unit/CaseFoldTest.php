@@ -8,7 +8,7 @@ namespace spinitron\precis\tests\unit;
 
 use spinitron\precis\CaseFold;
 
-class CaseFoldBaseUnicodeTest extends BaseUnicodeTest
+class CaseFoldTest extends BaseUnicodeTest
 {
     /**
      * @dataProvider everythingProvider

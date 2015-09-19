@@ -34,7 +34,7 @@ class CaseFoldDataGenerator extends DataGenerator
                 continue;
             }
 
-            $this->points[Precis::hex2utf8($matches[1])] = Precis::hex2utf8($matches[2]);
+            $this->points[Precis::codePoint2utf8($matches[1])] = Precis::codePoint2utf8($matches[2]);
         }
     }
 

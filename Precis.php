@@ -250,7 +250,7 @@ class Precis
         $char = mb_substr($string, $pos, 1, 'UTF-8');
         $before = $pos > 0 ? mb_substr($string, $pos - 1, 1, 'UTF-8') : null;
         $after = $pos < mb_strlen($string, 'UTF-8') ? mb_substr($string, $pos + 1, 1, 'UTF-8') : null;
-        $cp = static::utf8CodePoint($char);
+        $cp = static::utf82CodePoint($char);
         $propMap = [false => self::CPROP_DISALLOWED, true => self::CPROP_PVALID];
 
         if ($cp === 'U+00B7') {
@@ -309,7 +309,7 @@ class Precis
 
         // RFC 5892 Appendix A.1.
         $char = mb_substr($string, $pos, 1, 'UTF-8');
-        if (static::utf8CodePoint($char) === 'U+200D') {
+        if (static::utf82CodePoint($char) === 'U+200D') {
             return self::CPROP_DISALLOWED;
         }
 
@@ -365,35 +365,21 @@ class Precis
     }
 
     /**
-     * Returns the character of a hex codepoint.
-     *
-     * > Note: Does not validate input.
-     *
-     * @param string $hex Unicode codepoint in hex.
-     *
-     * @return null|string UTF-8 string or null if $ord is code point of a surrogate
-     */
-    public static function hex2utf8($hex)
-    {
-        if (preg_match('{D[8-F][0-9A-F]{2}$}i', $hex)) {
-            return null;
-        }
-
-        return mb_convert_encoding(hex2bin(sprintf('%08s', $hex)), 'UTF-8', 'UTF-32BE');
-    }
-
-    /**
      * UTF-8 version of PHP's chr() builtin.
      *
      * > Note: Does not validate input.
      *
-     * @param int $ord Unicode codepoint
+     * @param int $ord Unicode codepoint as a PHP intger
      *
-     * @return null|string UTF-8 string or null if $ord is code point of a surrogate
+     * @return null|string UTF-8 string or null if $ord is a surrogate
      */
     public static function utf8chr($ord)
     {
-        return static::hex2utf8(dechex($ord));
+        if ($ord >= 55296 && $ord <= 57343) {
+            return null;
+        }
+
+        return mb_convert_encoding(hex2bin(sprintf('%08X', $ord)), 'UTF-8', 'UTF-32BE');
     }
 
     /**
@@ -412,6 +398,30 @@ class Precis
     }
 
     /**
+     * Returns the utf8 character of a hex codepoint.
+     *
+     * @param string $codePoint Hex-based Unicode codepoint, e.g. "6D", "U+261E", "\u{1D15F}", "\u1f595"
+     *
+     * @return string|null|false single-character UTF-8 string, null if $ord is a surrogate, false on failure
+     */
+    public static function codePoint2utf8($codePoint)
+    {
+        // Extract 2 to 8 hex digits starting from the end.
+        if (!preg_match('{([0-9A-F]{2,8}).*?$}i', $codePoint, $matches)) {
+            return false;
+        }
+
+        $hex = $matches[1];
+
+        // Surrogates D800..DFFF are not allowed to be encoded
+        if (preg_match('{^0*D[8-F][0-9A-F]{2}$}i', $hex)) {
+            return null;
+        }
+
+        return mb_convert_encoding(hex2bin(sprintf('%08s', $hex)), 'UTF-8', 'UTF-32BE');
+    }
+
+    /**
      * Returns the Unicode code point of a UTF-8 character.
      *
      * @param string $string a UTF-8 character or string
@@ -420,7 +430,7 @@ class Precis
      *
      * @return string
      */
-    public static function utf8CodePoint($string, $pos = 0, $style = 'U+')
+    public static function utf82CodePoint($string, $pos = 0, $style = 'U+')
     {
         $format = preg_match('%^(.+?\p{Ps})(\p{Pe})$%u', $style, $matches)
             ? $matches[1] . '%04X' . $matches[2]
@@ -448,7 +458,7 @@ class Precis
         foreach ($chars as $pos => $char) {
             $cpDetails[$pos] = [
                 'char' => $char,
-                'cp' => static::utf8CodePoint($char),
+                'cp' => static::utf82CodePoint($char),
                 'prop' => static::$cpropLookup[static::getPrecisProperty($string, $pos)],
             ];
         }
