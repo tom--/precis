@@ -1,11 +1,19 @@
 <?php
 /**
+ * CaseFold class file
+ *
+ * @package spinitron/precis
  * @copyright Copyright (c) 2015 Spinitron LLC
  * @license ISC https://opensource.org/licenses/ISC
  */
 
 namespace spinitron\precis;
 
+/**
+ * Provides Unicode case folding (simple version) of strings.
+ *
+ * @package spinitron\precis
+ */
 class CaseFold
 {
     use CaseFoldDataTrait;

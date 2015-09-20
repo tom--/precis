@@ -1,11 +1,20 @@
 <?php
 /**
+ * Bidi class file
+ *
+ * @package spinitron/precis
  * @copyright Copyright (c) 2015 Spinitron LLC
  * @license ISC https://opensource.org/licenses/ISC
  */
 
 namespace spinitron\precis;
 
+/**
+ * Provides static methods to find Unicode Bidi property of characters and apply the IDNA
+ * Bidi Rule to strings.
+ *
+ * @package spinitron\precis
+ */
 class Bidi
 {
     use BidiDataTrait;

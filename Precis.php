@@ -1,5 +1,8 @@
 <?php
 /**
+ * Precis class file
+ *
+ * @package spinitron/precis
  * @copyright Copyright (c) 2015 Spinitron LLC
  * @license ISC https://opensource.org/licenses/ISC
  */
@@ -7,7 +10,14 @@
 namespace spinitron\precis;
 
 /**
- * Class Precis provides constants and static methods for working with PRECIS Framework RFC 7564.
+ * Provides constants and static methods for working with PRECIS Framework (RFC 7564),
+ * for testing strings against the IdentifierClass and FreeformClass, and for
+ * preparation and enforcement of the PRECIS UsernameCaseMapped, UsernameCasePreserved,
+ * OpaqueString and Nickname profiles.
+ *
+ * These are useful for applications handling internationalized usernames, passwords,
+ * network addresses and similar where standard handling of such strings improves the chance
+ * of interoperability.
  */
 class Precis
 {
