@@ -50,7 +50,7 @@ The package has two more classes as a stop-gap. (They may be useful for other pu
 
 ### Method index
 
-All public methods are static and documented in PHP dock blocks:
+All public methods are static. [Documentation](http://tom--.github.io/precis/namespaces/spinitron.precis.html)
 
 ```php
 // test for PRECIS string classes
