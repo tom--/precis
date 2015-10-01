@@ -12,21 +12,26 @@ class PrecisBaseUnicodeTest extends BaseUnicodeTest
 {
     public function testUtf8utils()
     {
+        $php7 = method_exists('\IntlChar', 'chr');
         for ($ord = 0; $ord < 1114112; $ord += 1) {
             // Surrogates
             if ($ord >= 55296 && $ord <= 57343) {
                 continue;
             }
 
-            if ($ord < 65536) {
-                $json = sprintf('"\u%04X"', $ord);
+            if ($php7) {
+                $expectedChar = \IntlChar::chr($ord);
             } else {
-                $twenty = $ord - 65536;
-                $low = $twenty % 1024 + 56320;
-                $high = ((int) floor($twenty/1024)) % 1024 + 55296;
-                $json = sprintf('"\u%04X\u%04X"', $high, $low);
+                if ($ord < 65536) {
+                    $json = sprintf('"\u%04X"', $ord);
+                } else {
+                    $twenty = $ord - 65536;
+                    $low = $twenty % 1024 + 56320;
+                    $high = ((int) floor($twenty / 1024)) % 1024 + 55296;
+                    $json = sprintf('"\u%04X\u%04X"', $high, $low);
+                }
+                $expectedChar = json_decode($json);
             }
-            $expectedChar = json_decode($json);
 
             $this->assertSame($expectedChar, Precis::utf8chr($ord));
 
