@@ -4,7 +4,7 @@
 
 [PRECIS](https://tools.ietf.org/html/rfc7564),
 "Preparation, Enforcement, and Comparison of Internationalized Strings", is a
-framework for handling Unicode strings representing thinks like network addresses,
+framework for handling Unicode strings representing things like network addresses,
 [identifiers and passwords](http://tools.ietf.org/html/rfc7613).
 
 The client (e.g. web browser) **prepares** strings (e.g. username, password) before
