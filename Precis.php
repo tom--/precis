@@ -459,7 +459,8 @@ class Precis
      *      [
      *          'char' => <the UTF-8 encoded character>,
      *          'cp' => <Unicode code point un U+XXXX notation>,
-     *          '' => <PRECIS code point property name>,
+     *          'prop' => <PRECIS code point property name>,
+     *      ]
      */
     public static function analyzeString($string)
     {
@@ -610,7 +611,8 @@ class Precis
 
         // 3. Case-Mapping
         if ($caseMapped) {
-            $string = CaseFold::fold($string, true);
+            // RFC8265 replaced the case folding with Unicode toLowerCase()
+            $string = mb_convert_case($string, MB_CASE_LOWER, 'UTF-8');
         }
 
         // 4. Normalize: Normal Form C
@@ -730,13 +732,14 @@ class Precis
     }
 
     /**
-     * Enforces the PRECIS Nickname profle on a string.
+     * Process a string using the PRECIS Nickname profle.
      *
-     * @param string $string the string to enforce
+     * @param string $string
+     * @param bool $caseMapped Apply the Case Mapping Rule. Use to compare nicknames, not to enforce.
      *
-     * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @return bool|string the processed string or false if the string does not conform to the profile
      */
-    public static function enforceNickname($string)
+    protected static function processNickname($string, $caseMapped)
     {
         // Prepare
         $string = static::prepareNickname($string);
@@ -747,16 +750,54 @@ class Precis
         // 1. No width mapping for Nickname
 
         // 2. Additional Mapping Rules
-        $string = trim(preg_replace('%\p{Zs}+%u', ' ', $string));
+        $string = preg_replace('%  +%', ' ', trim(preg_replace('%\p{Zs}%u', ' ', $string)));
 
         // 3. Case-Mapping
-        $string = CaseFold::fold($string, true);
+        if ($caseMapped) {
+            // RFC8266 changed from case folding to Unicode toLowerCase
+            $string = mb_convert_case($string, MB_CASE_LOWER, 'UTF-8');
+        }
 
         // 4. Normalize: Normal Form KC
         $string = \Normalizer::normalize($string, \Normalizer::FORM_KC);
 
         // 5. No directionality rule
 
-        return $string;
+        return $string === '' ? false : $string;
+    }
+
+    /**
+     * Enforce the PRECIS Nickname profle on the given string.
+     *
+     * @param string $string
+     *
+     * @return bool|string the enforced string or false if the string does not conform to the profile
+     */
+    public static function enforceNickname($string)
+    {
+        return static::processNickname($string, false);
+    }
+
+    /**
+     * Compare the two given nicknames. Like strcmp().
+     *
+     * NOTE: Take care to evaluate the type of the return. Zero means valid and "equal" nicknames while false means
+     * invalid nickname(s).
+     *
+     * @param string $a
+     * @param string $b
+     *
+     * @return bool|int zero means the nicknames are the same. 1 or -1 means they are different, false means one or
+     * both are invalid nickname strings.
+     */
+    public static function compareNicknames($a, $b)
+    {
+        $a = static::processNickname($a, true);
+        $b = static::processNickname($b, true);
+        if ($a === false || $b === false) {
+            return false;
+        }
+
+        return strcmp($a, $b);
     }
 }

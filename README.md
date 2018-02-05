@@ -34,19 +34,14 @@ The `Precis` class provides static methods to:
 
 In order to implement these, certain Unicode functionality is required that was
 absent in PHP before PHP 7.0 introduced [IntlChar](http://php.net/manual/en/class.intlchar.php).
-The package has two more classes as a stop-gap. (They may be useful for other purposes.)
-
-- `CaseFold` provides static methods for:
-
-    - Unicode [case folding](http://www.unicode.org/reports/tr44/#CaseFolding.txt)
-    (which is [different from the case conversion](http://unicode.org/faq/casemap_charprop.html) provided by `mb_convert_case()`)
+The package has another class as a stop-gap.
 
 - `Bidi` provides static methods for:
 
     - Getting the Unicode [Bidi](http://unicode.org/faq/bidi.html) [property](http://www.unicode.org/reports/tr9/) for a character
     - Applying the [IDNA Bidi Rule](https://tools.ietf.org/html/rfc5893)
 
-
+(Note: The `CaseFold` was removed afterPRECIS stopped using it.)
 
 ### Method index
 
@@ -84,9 +79,6 @@ Precis::utf8ord()
 Precis::codePoint2utf8()
 Precis::utf82CodePoint()
 
-// Unicode case folding
-CaseFold::fold()
-
 // Unicode Bidi class and IDNA Bidi rule
 Bidi::getClass()
 Bidi::rule()
@@ -95,7 +87,7 @@ Bidi::rule()
 
 ### Data
 
-The `Bidi` and `CaseFold` classes each have  their own repective "data trait" that contains
+The `Bidi` class has its own "data trait" that contains
 the relevant data from the Unicode Character Database.
 They are PHP classes in order to exploit opcode caches.
 They are traits not because I plan
@@ -128,6 +120,6 @@ The following are relatively well tested:
 
 ### Copyright and license
 
-- Copyright (c) 2015 Spinitron LLC
+- Copyright (c) 2015-2018 Spinitron LLC
 - ISC license https://opensource.org/licenses/ISC
 

@@ -169,10 +169,17 @@ class PrecisBaseUnicodeTest extends BaseUnicodeTest
 
         $this->assertEquals('ab', Precis::enforceNickname('ab'));
         $this->assertEquals('a b', Precis::enforceNickname('   a   b   '));
-        $this->assertEquals('a b', Precis::enforceNickname('   A   B   '));
 
         $this->assertEquals(' a B ', Precis::enforceOpaqueString(' a B '));
         $this->assertEquals(' a B ', Precis::enforceOpaqueString(' a B '));
+
+        $this->assertEquals('ab', Precis::enforceNickname('ab'));
+        $this->assertEquals('a b', Precis::enforceNickname('   a   b   '));
+
+        $this->assertFalse(Precis::prepareNickname("\x19"));
+        $this->assertFalse(Precis::enforceNickname(''));
+        $this->assertSame(0, Precis::compareNicknames('ab', '  AB  '));
+        $this->assertNotSame(0, Precis::compareNicknames('a b', '  AB  '));
     }
 
     /**
