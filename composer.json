@@ -1,6 +1,6 @@
 {
     "name": "spinitron/precis",
-    "description": "Implements PRECIS Framework, IDNA Bidi Rule, Unicode casefolding and Bidi properties",
+    "description": "Implements PRECIS Framework, IDNA Bidi Rule, Unicode Bidi properties",
     "version": "0.2.1",
     "type": "library",
     "keywords": [

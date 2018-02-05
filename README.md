@@ -10,7 +10,7 @@ framework for handling Unicode strings representing things like network addresse
 The client (e.g. web browser) **prepares** strings (e.g. username, password) before
 sending them over the network. Servers (e.g. a PHP app)
 **enforce** specific rules
-(e.g. checking for disallowed characters, case folding, etc.)
+(e.g. checking for disallowed characters, case mapping, etc.)
 on strings *before* comparing them (e.g. with values in a database).
 Both strings involved in a comparison must be enforced. If a hash function is used in the
 comparison (e.g. for a password), enforcement comes before hashing and comparison.
@@ -113,7 +113,6 @@ The following are relatively well tested:
 
 - UTF-8 utility functions are tested on every Unicode code point
 - `Bidi::getClass()`. NOTE: this test downloads UnicideData.txt from UCD (1.5 MB)
-- `CaseFold::fold()` although this requires PHP 7
 - The CONTEXTO and CONTEXTJ rules
 - `Precis::getPrecisProperty()`
 
