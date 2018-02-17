@@ -10,10 +10,10 @@
 namespace spinitron\precis;
 
 /**
- * Provides constants and static methods for working with PRECIS Framework (RFC 7564),
+ * Provides constants and static methods for working with PRECIS Framework (RFC 8264),
  * for testing strings against the IdentifierClass and FreeformClass, and for
  * preparation and enforcement of the PRECIS UsernameCaseMapped, UsernameCasePreserved,
- * OpaqueString and Nickname profiles.
+ * OpaqueString (RFC 8265) and Nickname (RFC 8266) profiles.
  *
  * These are useful for applications handling internationalized usernames, passwords,
  * network addresses and similar where standard handling of such strings improves the chance
@@ -72,6 +72,16 @@ class Precis
     const CPROP_PVALID = 4;
 
     /**
+     * PRECIS CONTEXTO Code Point Property
+     */
+    const CPROP_CONTEXTO = 5;
+
+    /**
+     * PRECIS CONTEXTO Code Point Property
+     */
+    const CPROP_CONTEXTJ = 6;
+
+    /**
      * @var array Lookup a string class name from its SCLASS_ constant.
      */
     protected static $cpropLookup = [
@@ -79,6 +89,8 @@ class Precis
         self::CPROP_DISALLOWED => 'DISALLOWED',
         self::CPROP_FREE_PVAL => 'FREE_PVAL',
         self::CPROP_PVALID => 'PVALID',
+        self::CPROP_CONTEXTO => 'CONTEXTO',
+        self::CPROP_CONTEXTJ => 'CONTEXTJ',
     ];
 
     /*
@@ -96,7 +108,7 @@ class Precis
     const CC_EXCEPTIONS_PVALID = '\x{00DF}\x{03C2}\x{06FD}\x{06FE}\x{0F0B}\x{3007}';
 
     /**
-     * PRECIS Exceptions that RFC 5892 lists as CONTAXTO
+     * PRECIS Exceptions that RFC 5892 lists as CONTEXTO
      */
     const CC_EXCEPTIONS_CONTEXTO = '\x{00B7}\x{0375}\x{05F3}\x{05F4}\x{30FB}\x{0660}-\x{0669}\x{06F0}-\x{06F9}';
 
@@ -112,8 +124,9 @@ class Precis
 
     /**
      * Codepoints unassigned in Unicode
+     * The list of exceptions are code points PCRE says are UNASSIGNED but are actually NOT A CHARACTER
      */
-    const CC_UNASSIGNED = '\p{Cn}';
+    const CC_UNASSIGNED = '(?=\p{Cn})(?![\\x{FDD0}-\\x{FDEE}\\x{FFFE}\\x{FFFF}\\x{1FFFE}\\x{1FFFF}\\x{2FFFE}\\x{2FFFF}\\x{3FFFE}\\x{3FFFF}\\x{4FFFE}\\x{4FFFF}\\x{5FFFE}\\x{5FFFF}\\x{6FFFE}\\x{6FFFF}\\x{7FFFE}\\x{7FFFF}\\x{8FFFE}\\x{8FFFF}\\x{9FFFE}\\x{9FFFF}\\x{AFFFE}\\x{AFFFF}\\x{BFFFE}\\x{BFFFF}\\x{CFFFE}\\x{CFFFF}\\x{DFFFE}\\x{DFFFF}\\x{EFFFE}\\x{EFFFF}\\x{FFFFE}\\x{FFFFF}\\x{10FFFE}])';
 
     /**
      * PRECIS ASCII7 (printable)
@@ -207,26 +220,29 @@ class Precis
      * @param string $charset the regex character class, without enclosing []
      *
      * @return bool
+     * @throws \InvalidArgumentException
      */
     protected static function inCharset($char, $charset)
     {
         if (mb_strlen($char, 'UTF-8') !== 1) {
-            throw new \InvalidArgumentException('$char must be one character');
+            throw new \InvalidArgumentException('$char must be one character: ' . var_export($char, 1));
         }
 
-        $pattern = '%[' . $charset . ']%u';
+        $pattern = $charset[0] === '('
+            ? ('%' . $charset . '%u')
+            : ('%[' . $charset . ']%u');
 
-        return (bool) preg_match($pattern, $char);
+        return (bool)preg_match($pattern, $char);
     }
 
     /**
-     * Implements the test for the PRECIS HasCompat (Q) category in RFC 7564.
+     * Implements the test for the PRECIS HasCompat (Q) category in RFC 8264.
      *
      * @param string $char
      *
      * @return bool
      */
-    public static function getHasCompat($char)
+    protected static function getHasCompat($char)
     {
         return \Normalizer::normalize($char, \Normalizer::FORM_KC) !== $char;
     }
@@ -241,7 +257,7 @@ class Precis
      *
      * @return int One of the CPROP_ derived property constants
      */
-    /*public static function getBackwardCompatible($char)
+    /*protected static function getBackwardCompatible($char)
     {
         return self::CPROP_PVALID;
     }*/
@@ -253,9 +269,9 @@ class Precis
      * @param int $pos position in the string of the character to test
      *
      * @return int either Precis::CPROP_DISALLOWED or Precis::CPROP_PVALID
-     * @throws \Exception if the character is not a CONTEXTO exception
+     * @throws \InvalidArgumentException if the character is not a CONTEXTO exception
      */
-    public static function getContextO($string, $pos)
+    protected static function getContextO($string, $pos)
     {
         $char = mb_substr($string, $pos, 1, 'UTF-8');
         $before = $pos > 0 ? mb_substr($string, $pos - 1, 1, 'UTF-8') : null;
@@ -304,9 +320,9 @@ class Precis
      * @param int $pos position in the string of the character to test
      *
      * @return int either Precis::CPROP_DISALLOWED or Precis::CPROP_PVALID
-     * @throws \Exception if the character is not a CONTEXTJ exception
+     * @throws \InvalidArgumentException if the character is not a CONTEXTJ exception
      */
-    public static function getContextJ($string, $pos)
+    protected static function getContextJ($string, $pos)
     {
         if ($pos < 1) {
             return self::CPROP_DISALLOWED;
@@ -333,24 +349,22 @@ class Precis
     }
 
     /**
-     * Determines the "derived property" of a character in the context of a string.
-     * Implements the algorithm specified in RFC 7564 8. Code Point Properties.
+     * Return the PRECIS derived property value of a character.
+     * Implements the algorithm specified in RFC 8264 Section 8. Code Point Properties.
      *
-     * @param string $string string containing the character to test
-     * @param int $pos position in the string of the character to test
+     * @param string $char the character to test
      *
-     * @return int the character's property: Precis::CPROP_PVALID, Precis::CPROP_FREE_PVAL,
-     * Precis::CPROP_DISALLOWED or Precis::CPROP_UNASSIGNED
+     * @return int the character's code point property as one of the Precis::CPROP_ constants
      */
-    public static function getPrecisProperty($string, $pos)
+    protected static function derivedProperty($char)
     {
         $ifelse = [
             [self::CC_EXCEPTIONS_PVALID, self::CPROP_PVALID],
             [self::CC_EXCEPTIONS_DISALLOWED, self::CPROP_DISALLOWED],
-            [self::CC_EXCEPTIONS_CONTEXTO, [__CLASS__, 'getContextO']],
+            [self::CC_EXCEPTIONS_CONTEXTO, self::CPROP_CONTEXTO],
             [self::CC_UNASSIGNED, self::CPROP_UNASSIGNED],
             [self::CC_ASCII7, self::CPROP_PVALID],
-            [self::CC_JOIN_CONTROL, [__CLASS__, 'getContextJ']],
+            [self::CC_JOIN_CONTROL, self::CPROP_CONTEXTJ],
             [self::CC_OLD_HANGUL_JAMO, self::CPROP_DISALLOWED],
             [self::CC_IGNORABLE, self::CPROP_DISALLOWED],
             [self::CC_CONTROLS, self::CPROP_DISALLOWED],
@@ -362,16 +376,35 @@ class Precis
             [self::CC_PUNCTUATION, self::CPROP_FREE_PVAL],
         ];
 
-        $char = mb_substr($string, $pos, 1, 'UTF-8');
         foreach ($ifelse as $case) {
             list($test, $prop) = $case;
-            $testResult = is_string($test) ? static::inCharset($char, $test) : call_user_func($test, $char);
-            if ($testResult) {
-                return is_int($prop) ? $prop : call_user_func($prop, $string, $pos);
+            if (is_string($test) ? static::inCharset($char, $test) : call_user_func($test, $char)) {
+                return $prop;
             }
         }
 
         return self::CPROP_DISALLOWED;
+    }
+
+    /**
+     * Determines the "derived property" of a character in the context of a string.
+     *
+     * @param string $string string containing the character to test
+     * @param int $pos position in the string of the character to test
+     *
+     * @return int the character's property: Precis::CPROP_PVALID, Precis::CPROP_FREE_PVAL,
+     * Precis::CPROP_DISALLOWED or Precis::CPROP_UNASSIGNED
+     * @throws \InvalidArgumentException
+     */
+    protected static function getPrecisProperty($string, $pos)
+    {
+        $getPrecisProperty = self::derivedProperty(mb_substr($string, $pos, 1, 'UTF-8'));
+
+        return $getPrecisProperty === self::CPROP_CONTEXTO
+            ? self::getContextO($string, $pos)
+            : ($getPrecisProperty === self::CPROP_CONTEXTJ
+                ? self::getContextJ($string, $pos)
+                : $getPrecisProperty);
     }
 
     /**
@@ -398,7 +431,7 @@ class Precis
      * @param string $string a UTF-8 character or string
      * @param int $pos position in th string of the character to decode
      *
-     * @return string Unicode code point as a string of 8 hex digits
+     * @return int Unicode code point as a string of 8 hex digits
      */
     public static function utf8ord($string, $pos = 0)
     {
@@ -461,8 +494,9 @@ class Precis
      *          'cp' => <Unicode code point un U+XXXX notation>,
      *          'prop' => <PRECIS code point property name>,
      *      ]
+     * @throws \InvalidArgumentException
      */
-    public static function analyzeString($string)
+    protected static function analyzeString($string)
     {
         $chars = preg_split('//u', $string, null, PREG_SPLIT_NO_EMPTY);
         $cpDetails = [];
@@ -484,8 +518,9 @@ class Precis
      *
      * @return int the string's class: Precis::SCLASS_IDENTIFIER, Precis::SCLASS_FREEFORM
      * or Precis::SCLASS_NUL
+     * @throws \InvalidArgumentException
      */
-    public static function getStringClass($string)
+    protected static function getStringClass($string)
     {
         $length = mb_strlen($string, 'UTF-8');
         $class = self::SCLASS_IDENTIFIER;
@@ -512,6 +547,7 @@ class Precis
      * that returns bool.
      *
      * @return bool true if all characters in the string pass the given test
+     * @throws \InvalidArgumentException
      */
     protected static function isClass($string, \Closure $test)
     {
@@ -532,6 +568,7 @@ class Precis
      * @param string $string the string to test
      *
      * @return bool true if the string conforms to PRECIS IdentifierClass
+     * @throws \InvalidArgumentException
      */
     public static function isIdentifier($string)
     {
@@ -546,6 +583,7 @@ class Precis
      * @param string $string the string to test
      *
      * @return bool true if the string conforms to PRECIS FreeformClass
+     * @throws \InvalidArgumentException
      */
     public static function isFreeform($string)
     {
@@ -561,7 +599,7 @@ class Precis
      *
      * @return string the mapped string
      */
-    public static function mapFullwidthHalfwidthToCompat($string)
+    protected static function mapFullwidthHalfwidthToCompat($string)
     {
         return preg_replace_callback(
             '%[\x{FF00}-\x{FFEF}]%u',
@@ -578,6 +616,7 @@ class Precis
      * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     protected static function prepareUsername($string)
     {
@@ -597,6 +636,7 @@ class Precis
      * @param bool $caseMapped set true to enforce UsernameCaseMapped or false for UsernameCasePreserved
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     protected static function enforceUsername($string, $caseMapped)
     {
@@ -632,6 +672,7 @@ class Precis
      * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function prepareUsernameCaseMapped($string)
     {
@@ -644,6 +685,7 @@ class Precis
      * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function prepareUsernameCasePreserved($string)
     {
@@ -656,6 +698,7 @@ class Precis
      * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function prepareOpaqueString($string)
     {
@@ -671,10 +714,14 @@ class Precis
      * @param string $string the string to prepare
      *
      * @return bool|string the prepared string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function prepareNickname($string)
     {
-        return static::prepareOpaqueString($string);
+        // Check encoding first because class check depends on valid UTF-8
+        return mb_check_encoding($string, 'UTF-8') && static::isFreeform($string)
+            ? $string
+            : false;
     }
 
     /**
@@ -683,6 +730,7 @@ class Precis
      * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function enforceUsernameCaseMapped($string)
     {
@@ -695,6 +743,7 @@ class Precis
      * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function enforceUsernameCasePreserved($string)
     {
@@ -707,6 +756,7 @@ class Precis
      * @param string $string the string to enforce
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function enforceOpaqueString($string)
     {
@@ -738,6 +788,7 @@ class Precis
      * @param bool $caseMapped Apply the Case Mapping Rule. Use to compare nicknames, not to enforce.
      *
      * @return bool|string the processed string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     protected static function processNickname($string, $caseMapped)
     {
@@ -772,6 +823,7 @@ class Precis
      * @param string $string
      *
      * @return bool|string the enforced string or false if the string does not conform to the profile
+     * @throws \InvalidArgumentException
      */
     public static function enforceNickname($string)
     {
@@ -789,6 +841,7 @@ class Precis
      *
      * @return bool|int zero means the nicknames are the same. 1 or -1 means they are different, false means one or
      * both are invalid nickname strings.
+     * @throws \InvalidArgumentException
      */
     public static function compareNicknames($a, $b)
     {

@@ -7,7 +7,7 @@
 namespace spinitron\precis\tests\unit;
 
 use spinitron\precis\Bidi;
-use spinitron\precis\Precis;
+use spinitron\precis\tests\Precis;
 
 class BidiTest extends BaseUnicodeTest
 {

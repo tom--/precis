@@ -10,6 +10,7 @@
         "bidi",
         "password",
         "username",
+        "nickname",
         "idn"
     ],
     "license": "ISC",

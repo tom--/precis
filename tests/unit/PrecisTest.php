@@ -6,7 +6,7 @@
 
 namespace spinitron\precis\tests\unit;
 
-use spinitron\precis\Precis;
+use spinitron\precis\tests\Precis;
 
 class PrecisBaseUnicodeTest extends BaseUnicodeTest
 {
@@ -116,9 +116,8 @@ class PrecisBaseUnicodeTest extends BaseUnicodeTest
         $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〵', 0));
         $this->assertSame(Precis::CPROP_DISALLOWED, Precis::getPrecisProperty('〻', 0));
 
-        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('ࣞ', 0));
-        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('৙', 0));
-        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty('੻', 0));
+        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty(Precis::utf8chr(0x150FF), 0));
+        $this->assertSame(Precis::CPROP_UNASSIGNED, Precis::getPrecisProperty(Precis::utf8chr(0x300FF), 0));
 
         $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('!', 0));
         $this->assertSame(Precis::CPROP_PVALID, Precis::getPrecisProperty('~', 0));
