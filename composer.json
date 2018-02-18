@@ -1,7 +1,7 @@
 {
     "name": "spinitron/precis",
     "description": "Implements PRECIS Framework, IDNA Bidi Rule, Unicode Bidi properties",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "type": "library",
     "keywords": [
         "i18n",
