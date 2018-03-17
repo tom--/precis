@@ -79,4 +79,10 @@ class DerivedPropertyValueTest extends BaseUnicodeTest
             }
         }
     }
+
+    public function testContextJSecondTestReturnsPVALID()
+    {
+        $string = "\xEA\xA1\xB2\xE2\x80\x8C\xD8\xA2";
+        $this->assertEquals(Precis::CPROP_PVALID, Precis::getPrecisProperty($string, 1));
+    }
 }
