@@ -335,7 +335,7 @@ class Precis
         }
 
         // RFC 5892 Appendix A.1. second test
-        $pattern = '[' . self::CC_JT_RIGHT . self::CC_JT_DUAL . ']';
+        $pattern = '[' . self::CC_JT_LEFT . self::CC_JT_DUAL . ']';
         $pattern .= '[' . self::CC_JT_TRANSPARENT . ']*';
         $pattern .= '\x{200C}';
         $pattern .= '[' . self::CC_JT_TRANSPARENT . ']*';
